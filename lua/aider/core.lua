@@ -22,7 +22,14 @@ function M.stop()
   
   -- Clean up any resources
   vim.schedule(function()
-    plugin:stop_aider()
+    -- Stop any running processes
+    pcall(function() plugin:stop_aider() end)
+    
+    -- Clear any global state
+    vim.g.aider_plugin = nil
+    vim.g.aider_status = nil
+    
+    -- Force garbage collection
     collectgarbage("collect")
   end)
 end

@@ -43,13 +43,15 @@ class AiderPlugin:
         
     def restore_session(self):
         """Restore a previous Aider session if it exists"""
-        session_file = self.get_session_file()
-        if not session_file.exists():
-            return False
-            
         try:
             import json
             from pathlib import Path
+            from aider.main import main
+            
+            session_file = self.get_session_file()
+            if not session_file.exists():
+                return False
+                
             with open(session_file, "r") as f:
                 session_data = json.load(f)
                 
@@ -114,9 +116,14 @@ class AiderPlugin:
             # Clean up buffers
             if self.io and self.io.buf:
                 try:
-                    self.nvim.command(f"bwipeout! {self.io.buf.number}")
+                    buf_num = self.io.buf.number
+                    if buf_num and self.nvim.buffers[buf_num] is self.io.buf:
+                        self.nvim.command(f"bwipeout! {buf_num}")
                 except:
-                    self.nvim.command("bdelete!")
+                    try:
+                        self.nvim.command("bdelete!")
+                    except:
+                        pass
                     
             self.io = None
             self.coder = None

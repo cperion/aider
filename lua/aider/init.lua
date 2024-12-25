@@ -3,6 +3,13 @@ local M = {}
 local function setup(config)
   config = config or {}
   
+  -- Ensure required dependencies
+  local ok, core = pcall(require, 'aider.core')
+  if not ok then
+    vim.notify('Failed to load aider.core: ' .. core, vim.log.levels.ERROR)
+    return
+  end
+  
   -- Set up keybindings
   vim.api.nvim_set_keymap('n', '<leader>aa', ':Aider<CR>', {noremap = true, silent = true})
   vim.api.nvim_set_keymap('n', '<leader>ac', ':AiderChat<CR>', {noremap = true, silent = true})

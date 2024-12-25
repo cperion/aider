@@ -20,7 +20,11 @@ function M.stop()
   local plugin = get_aider_plugin()
   if not plugin then return end
   
-  plugin:stop_aider()
+  -- Clean up any resources
+  vim.schedule(function()
+    plugin:stop_aider()
+    collectgarbage("collect")
+  end)
 end
 
 function M.focus_chat()

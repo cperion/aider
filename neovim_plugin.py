@@ -8,9 +8,12 @@ class AiderPlugin:
         self.io = None
         self.coder = None
         
-        # Register plugin with Neovim
-        self.nvim.command("let g:aider_plugin = v:lua.require('aider.core')")
-        self.setup_keybindings()
+        try:
+            # Register plugin with Neovim
+            self.nvim.command("let g:aider_plugin = v:lua.require('aider.core')")
+            self.setup_keybindings()
+        except Exception as e:
+            self.nvim.err_write(f"Error initializing Aider plugin: {e}\n")
         
     def setup_keybindings(self):
         """Setup default keybindings for Aider operations"""
@@ -45,6 +48,8 @@ class AiderPlugin:
             return False
             
         try:
+            import json
+            from pathlib import Path
             with open(session_file, "r") as f:
                 session_data = json.load(f)
                 
@@ -105,10 +110,17 @@ class AiderPlugin:
             
         try:
             self.save_session()
+            
+            # Clean up buffers
+            if self.io and self.io.buf:
+                try:
+                    self.nvim.command(f"bwipeout! {self.io.buf.number}")
+                except:
+                    self.nvim.command("bdelete!")
+                    
             self.io = None
             self.coder = None
             self.nvim.out_write("Aider session stopped and saved\n")
-            self.nvim.command("bdelete!")  # Close the chat buffer
         except Exception as e:
             self.nvim.err_write(f"Error stopping session: {e}\n")
 

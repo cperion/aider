@@ -12,8 +12,11 @@ class NeovimIO(InputOutput):
 
     def setup_highlighting(self):
         """Setup syntax highlighting for Neovim buffers"""
-        self.nvim.command("set filetype=markdown")
-        self.nvim.command("syntax enable")
+        try:
+            self.nvim.command("set filetype=markdown")
+            self.nvim.command("syntax enable")
+        except Exception as e:
+            self.nvim.err_write(f"Error setting up syntax highlighting: {e}\n")
         
     def update_status(self, status):
         """Update the status line with Aider's state"""

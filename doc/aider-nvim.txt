@@ -1,0 +1,71 @@
+*Aider.nvim*
+
+Aider plugin for Neovim provides AI-powered code assistance directly in your editor.
+
+INSTALLATION~
+
+1. Install the plugin using your preferred plugin manager:
+
+   - packer.nvim: >
+     use {
+       'aider-ai/aider.nvim',
+       requires = { 'nvim-lua/plenary.nvim' }
+     }
+
+   - vim-plug: >
+     Plug 'aider-ai/aider.nvim', { 'do': ':UpdateRemotePlugins' }
+
+2. Install dependencies: >
+   pip install pynvim aider
+
+USAGE~
+
+Start Aider session: >
+  :Aider
+
+Common commands:
+  :AiderChat       - Focus chat buffer
+  :AiderCommit     - Commit changes
+  :AiderUndo       - Undo last change
+  :AiderDiff       - Show diff
+  :AiderMap        - Show repository map
+  :AiderSettings   - Show settings
+  :AiderHelp       - Show help
+  :AiderStop       - Stop session
+
+Keybindings:
+  <leader>aa - Start/stop Aider
+  <leader>ac - Focus chat
+  <leader>ad - Show diff
+  <leader>au - Undo last change
+  <leader>am - Show repo map
+  <leader>as - Show settings
+  <leader>ah - Show help
+  <leader>at - Toggle multiline mode
+
+CONFIGURATION~
+
+Set your OpenAI API key: >
+  let g:aider_openai_api_key = 'your-key-here'
+
+Set default model: >
+  let g:aider_model = 'gpt-4'
+
+Set chat buffer filetype: >
+  let g:aider_filetype = 'markdown'
+
+STATUS LINE~
+
+Add this to your statusline to show Aider's state: >
+  %{exists('g:aider_status') ? g:aider_status : ''}
+
+TROUBLESHOOTING~
+
+If you encounter issues:
+1. Make sure pynvim is installed: pip install pynvim
+2. Check :messages for errors
+3. Restart Neovim after installation
+4. Ensure your API key is valid
+
+For more help: >
+  :help aider

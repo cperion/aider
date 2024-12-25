@@ -14,6 +14,11 @@ class NeovimIO(InputOutput):
         """Setup syntax highlighting for Neovim buffers"""
         self.nvim.command("set filetype=markdown")
         self.nvim.command("syntax enable")
+        
+    def update_status(self, status):
+        """Update the status line with Aider's state"""
+        self.nvim.command(f"let g:aider_status = '{status}'")
+        self.nvim.command("redrawstatus")
 
     def tool_output(self, msg: str, log_only: bool = False):
         """Display tool output in Neovim buffer"""

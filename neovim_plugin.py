@@ -7,6 +7,18 @@ class AiderPlugin:
         self.nvim = nvim
         self.io = None
         self.coder = None
+        self.setup_keybindings()
+        
+    def setup_keybindings(self):
+        """Setup default keybindings for Aider operations"""
+        self.nvim.command("nnoremap <silent> <leader>aa :Aider<CR>")
+        self.nvim.command("nnoremap <silent> <leader>ac :AiderChat<CR>")
+        self.nvim.command("nnoremap <silent> <leader>ad :AiderDiff<CR>")
+        self.nvim.command("nnoremap <silent> <leader>au :AiderUndo<CR>")
+        self.nvim.command("nnoremap <silent> <leader>am :AiderMap<CR>")
+        self.nvim.command("nnoremap <silent> <leader>as :AiderSettings<CR>")
+        self.nvim.command("nnoremap <silent> <leader>ah :AiderHelp<CR>")
+        self.nvim.command("nnoremap <silent> <leader>at :AiderToggleMultiline<CR>")
 
     @pynvim.command('Aider', nargs='*', range='')
     def start_aider(self, args, range):
@@ -15,9 +27,64 @@ class AiderPlugin:
             self.nvim.err_write("Aider is already running\n")
             return
 
+        # Try to restore previous session
+        if self.restore_session():
+            return
+
         # Create a new buffer for the chat
         buf = self.nvim.api.create_buf(False, True)
         self.nvim.api.set_current_buf(buf)
+        
+    def restore_session(self):
+        """Restore a previous Aider session if it exists"""
+        session_file = self.get_session_file()
+        if not session_file.exists():
+            return False
+            
+        try:
+            with open(session_file, "r") as f:
+                session_data = json.load(f)
+                
+            # Restore chat buffer
+            buf = self.nvim.api.create_buf(False, True)
+            self.nvim.api.set_current_buf(buf)
+            self.nvim.api.buf_set_lines(buf, 0, -1, True, session_data["chat_history"])
+            
+            # Initialize IO and Coder
+            self.io = NeovimIO(self.nvim, buf)
+            self.coder = main(return_coder=True, input=self.io, output=self.io)
+            
+            # Restore files
+            for fname in session_data["files"]:
+                self.coder.abs_fnames.add(fname)
+                
+            self.io.update_status("Restored")
+            return True
+            
+        except Exception as e:
+            self.nvim.err_write(f"Error restoring session: {e}\n")
+            return False
+            
+    def save_session(self):
+        """Save the current Aider session"""
+        if not self.coder:
+            return
+            
+        session_data = {
+            "chat_history": self.nvim.api.buf_get_lines(self.io.buf, 0, -1, True),
+            "files": list(self.coder.abs_fnames)
+        }
+        
+        session_file = self.get_session_file()
+        try:
+            with open(session_file, "w") as f:
+                json.dump(session_data, f)
+        except Exception as e:
+            self.nvim.err_write(f"Error saving session: {e}\n")
+            
+    def get_session_file(self):
+        """Get the path to the session file"""
+        return Path(self.nvim.funcs.stdpath("data")) / "aider_session.json"
         
         # Initialize NeovimIO
         self.io = NeovimIO(self.nvim, buf)
@@ -32,10 +99,15 @@ class AiderPlugin:
         if not self.io:
             self.nvim.err_write("No Aider session is running\n")
             return
-        
-        self.io = None
-        self.coder = None
-        self.nvim.out_write("Aider session stopped\n")
+            
+        try:
+            self.save_session()
+            self.io = None
+            self.coder = None
+            self.nvim.out_write("Aider session stopped and saved\n")
+            self.nvim.command("bdelete!")  # Close the chat buffer
+        except Exception as e:
+            self.nvim.err_write(f"Error stopping session: {e}\n")
 
     @pynvim.command('AiderChat')
     def focus_chat(self):

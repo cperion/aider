@@ -7,6 +7,9 @@ class AiderPlugin:
         self.nvim = nvim
         self.io = None
         self.coder = None
+        
+        # Register plugin with Neovim
+        self.nvim.command("let g:aider_plugin = v:lua.require('aider.core')")
         self.setup_keybindings()
         
     def setup_keybindings(self):
